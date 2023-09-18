@@ -1,13 +1,24 @@
 """Main module."""
 #%%
-import LLM
-from tweets_topic.get_topic import topic_extraction
-from tweets_similarity_search.search_tweets import TweetsSimilarity
-from tweets_irony.get_irony import irony_extraction
-from tweets_sentiment.get_sentiment import sentiment_extraction
-from tweets_emotion.get_emotions import emotion_extraction
+try:
+    import LLM
+    from tweets_topic.get_topic import topic_extraction
+    from tweets_similarity_search.search_tweets import TweetsSimilarity
+    from tweets_irony.get_irony import irony_extraction
+    from tweets_sentiment.get_sentiment import sentiment_extraction
+    from tweets_emotion.get_emotions import emotion_extraction
 
-from tweets_loader.csv_tweets_loader import loadCSVTweets
+    from tweets_loader.csv_tweets_loader import loadCSVTweets
+
+except ImportError:
+    import .LLM
+    from .tweets_topic.get_topic import topic_extraction
+    from .tweets_similarity_search.search_tweets import TweetsSimilarity
+    from .tweets_irony.get_irony import irony_extraction
+    from .tweets_sentiment.get_sentiment import sentiment_extraction
+    from .tweets_emotion.get_emotions import emotion_extraction
+
+    from .tweets_loader.csv_tweets_loader import loadCSVTweets
 
 from langchain.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
