@@ -11,7 +11,7 @@ try:
     from tweets_loader.csv_tweets_loader import loadCSVTweets
 
 except ImportError:
-    import .LLM
+    import LLM
     from .tweets_topic.get_topic import topic_extraction
     from .tweets_similarity_search.search_tweets import TweetsSimilarity
     from .tweets_irony.get_irony import irony_extraction
@@ -55,7 +55,7 @@ class Persona:
         self.debug = debug
         self.personality_username = personality_username
         
-        self.persona_tweets = self.get_tweets(self.personality_username)[:50]
+        self.persona_tweets = self.get_tweets(self.personality_username)
         
         self.tweets_similarity = TweetsSimilarity(self.persona_tweets,
                                                   debug=self.debug)
@@ -177,7 +177,7 @@ class ConversationBot:
         self.get_all_snippets()
         
         model_kwargs = {'device': 'cpu'}
-        self.embeddings = HuggingFaceEmbeddings(model_name="hkunlp/instructor-xl", model_kwargs=model_kwargs,)
+        # self.embeddings = HuggingFaceEmbeddings(model_name="hkunlp/instructor-xl", model_kwargs=model_kwargs,)
 
         self.persist_directory = '~/.db_instructor_xl'
         
@@ -195,8 +195,8 @@ class ConversationBot:
         loader = TextLoader("../sample_data/previous_conversation.txt")
         texts_ = loader.load()
         texts = self.text_splitter.create_documents([texts_[0].page_content])
-        self.db = Chroma.from_documents(texts, self.embeddings, persist_directory=self.persist_directory)
-        self.db.persist()
+        # self.db = Chroma.from_documents(texts, self.embeddings, persist_directory=self.persist_directory)
+        # self.db.persist()
         
         self.answers = []
         self.conv_buffer = []
@@ -229,17 +229,17 @@ class ConversationBot:
         
         starting_time = time.time()
         query = str(query)
-        print(f"Max: {query}\n")
+        # print(f"Max: {query}\n")
         self.conv_buffer.append(f"Max: {query}")
-        vectordb = Chroma(persist_directory=self.persist_directory, embedding_function=self.embeddings)
+        # vectordb = Chroma(persist_directory=self.persist_directory, embedding_function=self.embeddings)
 
-        #without similarity score
-        context = vectordb.similarity_search_with_score(query)
-        retriever = vectordb.as_retriever(search_type="mmr")
-        context = retriever.get_relevant_documents(query)
+        # #without similarity score
+        # context = vectordb.similarity_search_with_score(query)
+        # retriever = vectordb.as_retriever(search_type="mmr")
+        # context = retriever.get_relevant_documents(query)
         # context = context[0].page_content
 
-        context = context[0].page_content
+        # context = context[0].page_content
 
         # print(f"""Context Fetched for query: "{query}" :\n""",context)
         retrival_time =  time.time() - starting_time
@@ -263,16 +263,20 @@ class ConversationBot:
         
         The last matching tweets are 
         
-        The memory of the previous conversation between {self.NAME} and Max:
-        {context}
         
         Continuing from the last conversation where {self.NAME} greets Max with reference to the last conversation:
         {last_convo_str}
         \n"""
 
+        # The memory of the previous conversation between {self.NAME} and Max:
+        # {context}
+
+
+
         message = query
         prompt = f"{system_prompt}Max: {message}\n {self.NAME}:"
         
+        self.prompt = prompt
         
         # PROMTING THE LLM HERE
         response = LLM.get_response(prompt)
@@ -288,33 +292,33 @@ class ConversationBot:
         
         if person[-1] not in ['.', '?', '!']:
             if person.rfind(".") > person.rfind("?") and person.rfind(".") > person.rfind("!"):
-                print(f"Truncated from response: {person[person.rfind('.')+1:]}")
+                # print(f"Truncated from response: {person[person.rfind('.')+1:]}")
                 person = person[:person.rfind(".")] + person[person.rfind(".")]
             elif person.rfind("?") > person.rfind(".") and person.rfind("?") > person.rfind("!"):
-                print(f"Truncated from response: {person[person.rfind('.')+1:]}")
+                # print(f"Truncated from response: {person[person.rfind('.')+1:]}")
                 person = person[:person.rfind("?")] + person[person.rfind("?")]
                 
             elif person.rfind("!") > person.rfind(".") and person.rfind("!") > person.rfind("?"):
-                print(f"Truncated from response: {person[person.rfind('.')+1:]}")
+                # print(f"Truncated from response: {person[person.rfind('.')+1:]}")
                 person = person[:person.rfind("!")] + person[person.rfind("!")]
         
         len_response = len(person.split())
         
         time_after_generation = time.time()
         
-        print(f"""{self.NAME}: {person} \n\n""")
+        # print(f"""{self.NAME}: {person} \n\n""")
         self.conv_buffer.append(f"{self.NAME}: {person}")
         self.answers.append(person)
         
         dialog = f"Max: {query}\n{self.NAME}: {person}\n"
-        texts.append(dialog)
+        self.texts.append(dialog)
         if self.count%10 ==0:
-            texts_str = "\n".join(texts)
+            texts_str = "\n".join(self.texts)
             
             textss = self.text_splitter.create_documents([texts_str])
-            db = Chroma.from_documents(textss, self.embeddings, persist_directory=self.persist_directory)
-            db.persist()
-            texts = []
+            # db = Chroma.from_documents(textss, self.embeddings, persist_directory=self.persist_directory)
+            # db.persist()
+            self.texts = []
         
         store_time = time.time() - time_after_generation
         
@@ -326,4 +330,13 @@ class ConversationBot:
 if __name__ == "__main__":
     
     bot = ConversationBot("elonmusk")
+# %%
+
+
+    with open("../sample_data/sampleQuestions.txt") as f:
+        questions = f.readlines()
+
+    for question in questions:
+        A = bot.reply_user(question)
+        print(f"Max: {question}Elon Musk:{A} \n\n")
 # %%

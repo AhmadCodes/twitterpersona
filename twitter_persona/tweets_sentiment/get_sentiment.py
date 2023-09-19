@@ -35,9 +35,11 @@ def sentiment_extraction(tweets_list: list[str],
     list[str]
         A list of sentiments
     """
-
+    sentiments = []
     # Get the sentiment of each tweet
-    sentiments = model.sentiment(tweets_list, return_probability=True)
+    for tweet in tweets_list:
+        sentiments.append(model.sentiment(tweet, return_probability=True))
+    
     
     if debug:
         print(sentiments)
@@ -54,6 +56,8 @@ if __name__ == "__main__":
     
     example_tweets = ["I love my dog",
                     "I hate my dog",]
+    
+    example_tweets = example_tweets * 1000
     
     print(sentiment_extraction(example_tweets, debug=True))
 

@@ -38,8 +38,11 @@ def irony_extraction(tweets_list: list[str],
         A list of ironies
     """
     
-    # Get the irony of each tweet
-    ironies = model.irony(tweets_list)
+    ironies = []
+    
+    for tweet in tweets_list:
+        ironies.append(model.irony(tweet, return_probability=True))
+    
     
     if debug:
         print(ironies)
@@ -56,7 +59,7 @@ def irony_extraction(tweets_list: list[str],
 if __name__ == "__main__":
     
     example_tweets = ["I love my dog",
-                    "Is this dog any more lovable?",]
+                    "Is this dog any more lovable?",] *1000
     
     print(irony_extraction(example_tweets, debug=True))    
 # %%

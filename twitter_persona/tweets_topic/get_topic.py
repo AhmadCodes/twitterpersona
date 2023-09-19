@@ -40,8 +40,12 @@ def topic_extraction(tweets_list: list[str],
         A list of topics
     """
 
+    topics = []
+    
     # Get the topic of each tweet
-    topics = model.topic(tweets_list, return_probability=True)
+    for tweet in tweets_list:
+        topics.append(model.topic(tweet, return_probability=True))
+    
     
     if debug:
         print(topics)
@@ -67,6 +71,8 @@ if __name__ == "__main__":
     example_tweets = ["I love my dog",
                     "I love my dog",]
     
-    print(topic_extraction(example_tweets, debug=True))
+    print(topic_extraction(example_tweets,
+                           thresh=0.2,
+                           debug=True))
 
 # %%

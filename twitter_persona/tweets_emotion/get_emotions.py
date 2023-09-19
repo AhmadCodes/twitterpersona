@@ -38,9 +38,13 @@ def emotion_extraction(tweets_list: list[str],
         _description_
     """
     
-    emotions = model.emotion(tweets_list,
-                             return_probability=True)
+    emotions = []
     
+    for tweet in tweets_list:
+        e = model.emotion(tweet,
+                                return_probability=True)
+        emotions.append(e)
+        
     if debug:
         print(emotions)
     

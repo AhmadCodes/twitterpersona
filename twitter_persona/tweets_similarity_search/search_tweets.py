@@ -74,7 +74,7 @@ if __name__ == "__main__":
                         "I hate my cat",
                         "I love my dog and my cat",
                         "I hate my dog and my cat",
-                        ]
+                        ] *1000
         
         similarity = TweetsSimilarity(example_tweets, debug=True)
         
