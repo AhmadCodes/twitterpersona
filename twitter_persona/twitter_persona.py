@@ -4,6 +4,7 @@ import os
 try:
 
     from LLM.request_llm import get_response
+    from base_prompt import base_prompt as BASEPROMPT
     from tweets_topic.get_topic import topic_extraction
     from tweets_similarity_search.search_tweets import TweetsSimilarity
     from tweets_irony.get_irony import irony_extraction
@@ -13,6 +14,7 @@ try:
     from tweets_loader.csv_tweets_loader import loadCSVTweets
 
 except ImportError:
+    from .base_prompt import base_prompt as BASEPROMPT
     from .LLM.request_llm import get_response
     from .tweets_topic.get_topic import topic_extraction
     from .tweets_similarity_search.search_tweets import TweetsSimilarity
@@ -266,7 +268,7 @@ class ConversationBot:
         last_convo = self.conv_buffer[-20:]
         last_convo_str = "\n".join(last_convo)
 
-        from base_prompt import base_prompt
+        
 
         matching_tweets = self.persona.get_similar_tweets(query)
 
@@ -276,7 +278,7 @@ class ConversationBot:
         if len(matching_tweets) == 0:
             matching_tweets_str = ""
 
-        base_prompt = base_prompt.format(self.NAME, self.personality_username)
+        base_prompt = BASEPROMPT.format(self.NAME, self.personality_username)
 
         system_prompt = f"""
         {base_prompt}
