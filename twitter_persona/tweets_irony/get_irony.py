@@ -11,8 +11,6 @@ except ImportError:
 
 #%% load model
 
-model = tweetnlp.load_model('irony')  # Or `model = tweetnlp.TopicClassification()`
-
 #%% 
 
 def irony_extraction(tweets_list: list[str],
@@ -37,6 +35,9 @@ def irony_extraction(tweets_list: list[str],
     list[str]
         A list of ironies
     """
+    
+    model = tweetnlp.load_model('irony')  # Or `model = tweetnlp.TopicClassification()`
+
     
     ironies = []
     

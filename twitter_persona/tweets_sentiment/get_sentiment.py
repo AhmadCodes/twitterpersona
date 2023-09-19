@@ -12,7 +12,6 @@ except ImportError:
 #%%
 
 # MULTI-LABEL MODEL 
-model = tweetnlp.load_model('sentiment')  # Or `model = tweetnlp.TopicClassification()`
 
 
 #%%
@@ -35,6 +34,9 @@ def sentiment_extraction(tweets_list: list[str],
     list[str]
         A list of sentiments
     """
+    
+    model = tweetnlp.load_model('sentiment')  # Or `model = tweetnlp.TopicClassification()`
+
     sentiments = []
     # Get the sentiment of each tweet
     for tweet in tweets_list:

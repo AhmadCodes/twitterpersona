@@ -10,7 +10,6 @@ except ImportError:
 
 #%%
 
-model = tweetnlp.load_model('hate')  # Or `model = tweetnlp.TopicClassification()`
 
 
 #%%
@@ -37,6 +36,9 @@ def hate_extraction(tweets_list: list[str],
     list[str]
         A list of hates
     """
+    
+    model = tweetnlp.load_model('hate')  # Or `model = tweetnlp.TopicClassification()`
+
     
     hates = model.hate(tweets_list, return_probability=True)
     

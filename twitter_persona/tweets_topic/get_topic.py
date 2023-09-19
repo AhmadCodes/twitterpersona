@@ -12,7 +12,6 @@ except ImportError:
 #%%
 
 # MULTI-LABEL MODEL 
-model = tweetnlp.load_model('topic_classification')  # Or `model = tweetnlp.TopicClassification()`
 
 
 #%%
@@ -39,6 +38,8 @@ def topic_extraction(tweets_list: list[str],
     list[str]
         A list of topics
     """
+    model = tweetnlp.load_model('topic_classification')  # Or `model = tweetnlp.TopicClassification()`
+
 
     topics = []
     

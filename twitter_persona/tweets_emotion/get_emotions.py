@@ -11,7 +11,7 @@ except ImportError:
     
 #%%
 
-model = tweetnlp.load_model('emotion') 
+
 #%%
 
 def emotion_extraction(tweets_list: list[str],
@@ -37,6 +37,7 @@ def emotion_extraction(tweets_list: list[str],
     tuple[list[str], list[str]]
         _description_
     """
+    model = tweetnlp.load_model('emotion') 
     
     emotions = []
     
