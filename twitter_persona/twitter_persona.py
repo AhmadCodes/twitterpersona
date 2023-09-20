@@ -51,12 +51,14 @@ from langchain.embeddings import HuggingFaceEmbeddings
 # %%
 
 
-class Persona:
+class TwitterPersona:
 
     def __init__(self,
                  personality_username: str,
+                 persona_name="Elon Musk",
                  debug=False) -> None:
 
+        self.NAME = persona_name
         self.debug = debug
         self.personality_username = personality_username
 
@@ -64,6 +66,8 @@ class Persona:
 
         self.tweets_similarity = TweetsSimilarity(self.persona_tweets,
                                                   debug=self.debug)
+        
+        self.get_all_snippets()
 
     def get_tweets(self, personality_username):
 
@@ -76,16 +80,13 @@ class Persona:
                                                          top_k=3,
                                                          debug=self.debug)
 
-        emotions_percentages = [[k, str(v*100)]
+        emotions_percentages = [[k, v*100]
                                 for k, v in emotions_percentage_dict.items()]
 
         line_seperated_emotions_percentages = "\n".join(
-            [f"{k}: {v}%" for k, v in emotions_percentages])
+            [f"- {k.replace('_', ' ')}: {(v):.2f}%" for k, v in emotions_percentages])
 
-        emotions_prompt_snippet = """
-        Their Tweets' Emotion Percentages:
-        {}
-        """.format(line_seperated_emotions_percentages)
+        emotions_prompt_snippet = """\nEmotions:\n{}\n""".format(line_seperated_emotions_percentages)
 
         return emotions_prompt_snippet
 
@@ -96,12 +97,9 @@ class Persona:
                                                      debug=self.debug)
 
         line_seperated_topic_percentages = "\n".join(
-            [f"{k}: {(v*100):.2f}%" for k, v in topic_percentages_dict.items()])
+            [f"- {k.replace('_', ' ')}: {(v*100):.2f}%" for k, v in topic_percentages_dict.items()])
 
-        topic_prompt_snippet = """
-        Their Tweets' Topic Percentages:
-        {}
-        """.format(line_seperated_topic_percentages)
+        topic_prompt_snippet = """Topic:\n{}\n""".format(line_seperated_topic_percentages)
 
         return topic_prompt_snippet
 
@@ -111,12 +109,9 @@ class Persona:
                                                              debug=self.debug)
 
         line_seperated_sentiment_percentages = "\n".join(
-            [f"{k}: {(v*100):.2f}%" for k, v in sentiment_percentages_dict.items()])
+            [f"- {k.replace('_', ' ')}: {(v*100):.2f}%" for k, v in sentiment_percentages_dict.items()])
 
-        sentiment_prompt_snippet = """
-        Their Tweets' Sentiment Percentages:
-        {}
-        """.format(line_seperated_sentiment_percentages)
+        sentiment_prompt_snippet = """\nSentiments:\n{}\n""".format(line_seperated_sentiment_percentages)
 
         return sentiment_prompt_snippet
 
@@ -127,14 +122,27 @@ class Persona:
                                                      debug=self.debug)
 
         line_seperated_irony_percentages = "\n".join(
-            [f"{k}: {(v*100):.2f}%" for k, v in irony_percentages_dict.items()])
+            [f"- {k.replace('_', ' ')}: {(v*100):.2f}%" for k, v in irony_percentages_dict.items()])
 
-        irony_prompt_snippet = """
-        Their Tweets' Irony Percentages:
-        {}
-        """.format(line_seperated_irony_percentages)
+        irony_prompt_snippet = """\nIrony:\n{}\n""".format(line_seperated_irony_percentages)
 
         return irony_prompt_snippet
+    
+    def get_all_snippets(self):
+        
+        print(f"Analysing {self.NAME}'s {len(self.persona_tweets)} Tweets for Personality Analysis...")
+        print("Please Wait. This may take a while...\n")
+
+        self.emotions_prompt_snippet = self.get_emotions_prompt_snippet()
+        self.topic_prompt_snippet = self.get_topic_prompt_snippet()
+        self.sentiment_prompt_snippet = self.get_sentiment_prompt_snippet()
+        self.irony_prompt_snippet = self.get_irony_prompt_snippet()
+
+        self.all_snippets = "\n".join([self.emotions_prompt_snippet,
+                                       self.topic_prompt_snippet,
+                                       self.sentiment_prompt_snippet,
+                                       self.irony_prompt_snippet])
+        self.all_snippets = f"{self.NAME}'s Tweet Analysis (Percentages):" + self.all_snippets
 
     def get_similar_tweets(self, query_tweet):
 
@@ -142,13 +150,13 @@ class Persona:
                                                                     thresh=0.7,
                                                                     top_k=5)
 
+        
         line_seperated_tweets = "\n".join(matching_tweets)
 
-        similar_tweets_prompt_snippet = """
-        Their Similar Tweets to the user query:
-        {}
-        """.format(line_seperated_tweets)
+        similar_tweets_prompt_snippet = """Their Similar Tweets to the user query:\n{}\n""".format(line_seperated_tweets)
 
+        if line_seperated_tweets == "":
+            similar_tweets_prompt_snippet = ""
         return similar_tweets_prompt_snippet
 
 
@@ -158,22 +166,21 @@ class Persona:
 class ConversationBot:
 
     def __init__(self,
-                 personality_username: str,
+                 persona_object,
                  user_name="Max",
                  debug=False) -> None:
 
         self.user_name = user_name
 
         self.debug = debug
-        self.persona = Persona(personality_username, debug=self.debug)
+        self.persona = persona_object
 
-        self.NAME = "Elon Musk"
+        self.NAME = self.persona.NAME
+        
+        self.all_snippets = self.persona.all_snippets
 
-        self.personality_username = personality_username
+        self.personality_username = self.persona.personality_username
 
-        self.get_all_snippets()
-
-        model_kwargs = {'device': 'cpu'}
         # self.embeddings = HuggingFaceEmbeddings(model_name="hkunlp/instructor-xl", model_kwargs=model_kwargs,)
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': 'cuda:0'})
@@ -186,7 +193,7 @@ class ConversationBot:
 
         self.persist_directory = os.path.join(
             twitterpersona_path,
-            '.{self.user_name}_{self.personality_username}_db')
+            f'.{self.user_name}_{self.personality_username}_db')
         if not os.path.exists(self.persist_directory):
             os.makedirs(self.persist_directory, exist_ok=True)
 
@@ -202,15 +209,14 @@ class ConversationBot:
 
         
         prev_converstion_path = os.path.join(
-            curr_file_path, 
-            f"../sample_data/previous_conversation.txt")
-
+            twitterpersona_path, f"{self.user_name}_{self.personality_username}_prev_conversation.txt")
+        
         if not os.path.exists(twitterpersona_path):
             os.makedirs(twitterpersona_path, exist_ok=True)
 
         if not os.path.exists(prev_converstion_path):
             with open(prev_converstion_path, "w") as f:
-                f.write("")
+                f.write(f"{self.user_name}: . . .")
 
         loader = TextLoader(prev_converstion_path)
         texts_ = loader.load()
@@ -229,19 +235,8 @@ class ConversationBot:
         self.texts = []
 
         self.count = 0
-
-    def get_all_snippets(self):
-
-        self.emotions_prompt_snippet = self.persona.get_emotions_prompt_snippet()
-        self.topic_prompt_snippet = self.persona.get_topic_prompt_snippet()
-        self.sentiment_prompt_snippet = self.persona.get_sentiment_prompt_snippet()
-        self.irony_prompt_snippet = self.persona.get_irony_prompt_snippet()
-
-        self.all_snippets = "\n".join([self.emotions_prompt_snippet,
-                                       self.topic_prompt_snippet,
-                                       self.sentiment_prompt_snippet,
-                                       self.irony_prompt_snippet])
-
+        
+        
     def reply_user(self, query):
 
         self.count += 1
@@ -272,20 +267,17 @@ class ConversationBot:
 
         matching_tweets = self.persona.get_similar_tweets(query)
 
-        matching_tweets_str = """The last matching tweets are:
-        {matching_tweets}"""
 
-        if len(matching_tweets) == 0:
-            matching_tweets_str = ""
-
-        base_prompt = BASEPROMPT.format(self.NAME, self.personality_username)
+        base_prompt = BASEPROMPT.format(self.NAME, 
+                                        self.personality_username,
+                                        self.user_name)
 
         system_prompt = f"""
         {base_prompt}
         
         {self.all_snippets}
         
-        {matching_tweets_str}
+        {matching_tweets}
         
         The memory of the previous conversation between {self.NAME} and {self.user_name}:
         {context}
@@ -294,8 +286,16 @@ class ConversationBot:
         {last_convo_str}\n"""
 
         message = query
-        prompt = f"{system_prompt}{self.user_name}: {message}\n {self.NAME}:"
+        prompt = f"{system_prompt}{self.NAME}:"
+        
+        while "\n\n" in prompt:
+            prompt = prompt.replace("\n\n", "\n")
+        
+        while "    " in prompt:
+            prompt = prompt.replace("    ", "")
 
+        
+        
         self.prompt = prompt
 
         # PROMTING THE LLM HERE
@@ -330,7 +330,7 @@ class ConversationBot:
 
         dialog = f"{self.user_name}: {query}\n{self.NAME}: {person}\n"
         self.texts.append(dialog)
-        if self.count % 10 == 0:
+        if self.count % 3 == 0:
             texts_str = "\n".join(self.texts)
 
             textss = self.text_splitter.create_documents([texts_str])
@@ -346,8 +346,9 @@ class ConversationBot:
 
 
 if __name__ == "__main__":
-
-    bot = ConversationBot("elonmusk")
+    
+    elonpersona = TwitterPersona("elonmusk")
+    bot = ConversationBot(elonpersona)
 
     with open("../sample_data/sampleQuestions.txt") as f:
         questions = f.readlines()
